@@ -1,0 +1,19 @@
+{
+  "name": "datapackage-ckan",
+  "version": "0.1.0",
+  "dependencies": {
+      "request": ""
+    , "csv-parse": ""
+    , "ckan": ""
+    , "marked": ""
+    , "datapackage-read": ""
+  },
+  "devDependencies": {
+      "mocha": ""
+    , "sinon": ""
+  },
+  "main": "./index",
+  "scripts": {
+    "test": "mocha test"
+  }
+}
