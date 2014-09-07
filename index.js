@@ -162,7 +162,13 @@ Importer.prototype.importResource = function(dataStream, resourceJson, cb) {
     }
     data.records = rows;
 
-    that.client.action('datastore_create', data, cb);
+    // drop any existing data first ...
+    that.client.action('datastore_delete', {resource_id: resourceId}, function(err) {
+      // ignore errors as probably just 404 (i.e. no datastore table yet)
+      // TODO: check that this really is 404 error (and not something else)
+      // if (err) ... do something
+      that.client.action('datastore_create', data, cb);
+    })
   });
   if (typeof(dataStream) == 'string') {
     parser.write(dataStream);

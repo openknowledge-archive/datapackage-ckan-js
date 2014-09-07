@@ -43,8 +43,8 @@ describe('importResource', function() {
       }
     };
     importer.importResource(inStream, resource, function(err, out) {
-      assert(stubbed.calledOnce);
-      calledWith = stubbed.getCall(0).args[0];
+      assert.equal(stubbed.callCount, 2);
+      calledWith = stubbed.getCall(1).args[0];
       assert.equal(calledWith.data.resource_id, resource.id);
       assert.deepEqual(calledWith.data.fields, [
         { id: 'A', type: 'int'}, { id: 'B', type: 'int' }
@@ -84,16 +84,17 @@ describe('push', function() {
     var importer = new Importer('http://localhost');
     importer.push('test/fixtures/datapackage.json', function(err, out) {
       assert(!err, JSON.stringify(err));
-      // should be called 3x
+      // should be called 4x
       // 1x to see if dataset exists
       // 1x for metadata creation
+      // 1x to drop data in datastore
       // 1x for data into the datastore
-      assert.equal(stubbed.callCount, 3);
+      assert.equal(stubbed.callCount, 4);
 
       datasetData = stubbed.getCall(1).args[0].data;
       assert.equal(datasetData.resources.length, 1);
 
-      datastoreData = stubbed.getCall(2).args[0].data;
+      datastoreData = stubbed.getCall(3).args[0].data;
       assert.deepEqual(datastoreData.fields[0], {
         id: 'A',
         type: 'text'
