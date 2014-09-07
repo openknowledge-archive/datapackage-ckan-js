@@ -1,0 +1,19 @@
+{
+  "name": "test-datapackage-ckan",
+  "resources": [
+    {
+      "name": "file1",
+      "path": "data.csv",
+      "schema": {
+        "fields": [
+          {
+            "name": "A"
+          },
+          {
+            "name": "B"
+          }
+        ]
+      }
+    }
+  ]
+}
