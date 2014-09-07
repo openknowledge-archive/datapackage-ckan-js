@@ -76,7 +76,9 @@ Importer.prototype.upsertDatasetMetadata = function(dpJson, cb) {
       // client.action('dataset_update', datasetInfo, cb);
       cb(null, out.result);
     } else {
-      that.client.action('dataset_create', ckanDatasetJson, cb);
+      that.client.action('dataset_create', ckanDatasetJson, function(err, out) {
+        cb(err, out.result)
+      });
     }
   });
 };

@@ -68,7 +68,10 @@ describe('push', function() {
         // by returning error here we indicate 404 not found
         cb('dataset does not exist');
       } else if (arg1.url.indexOf('package_create') != -1) {
-        cb(null, fakeCkanDataset);
+        cb(null, {
+          success: true,
+          result: fakeCkanDataset
+        });
       } else {
         cb();
       }
