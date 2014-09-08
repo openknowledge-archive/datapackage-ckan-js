@@ -163,28 +163,63 @@ Importer.prototype.importResource = function(dataStream, resourceJson, cb) {
   if (resourceJson.primaryKey) {
     data.primary_key = resourceJson.primaryKey
   }
+  // drop any existing data first ...
+  // we ignore errors from datastore_delete as likely just 404 (i.e. no datastore table yet)
+  // TODO: check that errors really are 404 (and not something else)
+  that.client.action('datastore_delete', {resource_id: resourceId}, function(err) {
+    that.client.action('datastore_create', data, function(err) {
+      if (err) {
+        cb(err);
+        return;
+      }
+      that._loadDataToDataStore(dataStream, resourceId, cb);
+    });
+  });
+};
+
+// load rows of data one chunk at a time
+Importer.prototype._loadDataToDataStore = function(dataStream, resourceId, cb) {
+  var that = this
+    , offset = 0
+    , chunkSize = 10000
+    , rows = null
+    ;
+
   // assume a header row on the CSV file
-  var parser = parse({columns: true}, function(err, rows) {
+  var parser = parse({columns: true}, function(err, _rows) {
+    rows = _rows;
+    loadData(err);
+  });
+
+  function loadData(err) {
     if (err) {
+      console.error(err);
       cb(err);
       return;
     }
-    data.records = rows;
+    // we are finished
+    if (offset > rows.length) {
+      cb();
+      return;
+    }
 
-    // drop any existing data first ...
-    that.client.action('datastore_delete', {resource_id: resourceId}, function(err) {
-      // ignore errors as probably just 404 (i.e. no datastore table yet)
-      // TODO: check that this really is 404 error (and not something else)
-      // if (err) ... do something
-      that.client.action('datastore_create', data, cb);
-    })
-  });
+    console.log('Done rows: ' + offset);
+
+    var data = {
+      resource_id: resourceId,
+      method: 'insert',
+      records: rows.slice(offset, offset+chunkSize)
+    };
+    offset += chunkSize;
+    that.client.action('datastore_upsert', data, loadData);
+  }
+
+  // now start it running
   if (typeof(dataStream) == 'string') {
     parser.write(dataStream);
     parser.end();
   } else {
     dataStream.pipe(parser);
   }
-};
-
+}
 

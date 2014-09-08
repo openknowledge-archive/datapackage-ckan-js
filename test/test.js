@@ -43,13 +43,14 @@ describe('importResource', function() {
       }
     };
     importer.importResource(inStream, resource, function(err, out) {
-      assert.equal(stubbed.callCount, 2);
+      assert.equal(stubbed.callCount, 3);
       calledWith = stubbed.getCall(1).args[0];
       assert.equal(calledWith.data.resource_id, resource.id);
       assert.deepEqual(calledWith.data.fields, [
         { id: 'A', type: 'int'}, { id: 'B', type: 'int' }
       ]);
-      assert.deepEqual(calledWith.data.records, [
+      var insertData = stubbed.getCall(2).args[0].data;
+      assert.deepEqual(insertData.records, [
         { A:1, B:2 }
       ]);
       done(err);
@@ -89,18 +90,20 @@ describe('push', function() {
       // 1x for metadata creation
       // 1x to drop data in datastore
       // 1x for data into the datastore
-      assert.equal(stubbed.callCount, 4);
+      assert.equal(stubbed.callCount, 5);
 
-      datasetData = stubbed.getCall(1).args[0].data;
+      var datasetData = stubbed.getCall(1).args[0].data;
       assert.equal(datasetData.resources.length, 1);
 
-      datastoreData = stubbed.getCall(3).args[0].data;
+      var datastoreData = stubbed.getCall(3).args[0].data;
       assert.deepEqual(datastoreData.fields[0], {
         id: 'A',
         type: 'text'
       });
-      assert.equal(datastoreData.records.length, 2);
-      assert.equal(datastoreData.resource_id, resourceId);
+
+      var insertData = stubbed.getCall(4).args[0].data;
+      assert.equal(insertData.records.length, 2);
+      assert.equal(insertData.resource_id, resourceId);
 
       done(err);
     });
