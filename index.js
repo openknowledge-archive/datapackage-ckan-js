@@ -109,29 +109,34 @@ Importer.prototype.importResources = function(dpJson, dpBasePath, cb) {
     return;
   }
 
-  // our hack way to do parallel async calls w/o async or Q library
-  var count = dpJson.resources.length
-    , errors = [];
+  // our hack way to do serial async calls w/o async or Q library
+  var count = -1
+    , errors = []
     ;
   var done = function(err) {
     if (err) {
       errors.push(err);
     }
-    count--;
-    if (count == 0) {
+    count++;
+    if (count == dpJson.resources.length) {
       if (errors.length >= 1) cb(errors.join('\n'));
       else cb(null);
+    } else {
+      var res = dpJson.resources[count];
+      _doImport(res, done);
     }
   }
 
   // Assume we only have Tabular Data Packages (i.e. csv data)
   // TODO: what do we do with non-CSV data ...
-  for (ii=0; ii<dpJson.resources.length; ii++) {
-    var res = dpJson.resources[ii];
-    var dataPath = path.join(dpBasePath, res.path);
+  function _doImport(resource, cb) {
+    var dataPath = path.join(dpBasePath, resource.path);
     var dataStream = fs.createReadStream(dataPath);
-    that.importResource(dataStream, dpJson.resources[ii], done); 
+    that.importResource(dataStream, resource, cb); 
   }
+
+  // start off looping through resources
+  done();
 }
 
 Importer.prototype.importResource = function(dataStream, resourceJson, cb) {
