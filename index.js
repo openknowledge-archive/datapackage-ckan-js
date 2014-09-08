@@ -44,7 +44,9 @@ Importer.prototype.push = function(filePath, cb) {
       cb(err);
       return;
     }
+    console.log('Loaded Data Package');
     that.upsertDatasetMetadata(dpJson, function(err, createdCkanDataset) {
+      console.log('Created/Updated CKAN Dataset with Data Package Metadata');
       if (err) {
         cb(err);
         return;
@@ -137,6 +139,8 @@ Importer.prototype.importResource = function(dataStream, resourceJson, cb) {
     , resourceId = resourceJson.id
     , fields = []
     ;
+
+  console.log('Pushing data to CKAN DataStore for resource: ' + resourceJson.name);
 
   if (resourceJson.schema && resourceJson.schema.fields) {
     fields = resourceJson.schema.fields.map(function(field) {
