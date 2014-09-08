@@ -5,7 +5,6 @@
       "request": ""
     , "csv-parse": ""
     , "ckan": ""
-    , "marked": ""
     , "datapackage-read": ""
   },
   "devDependencies": {
