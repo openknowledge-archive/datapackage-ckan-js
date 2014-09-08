@@ -5,12 +5,12 @@ var fs = require('fs')
   , dpRead = require('datapackage-read')
   ;
 
-var Importer = function(ckanInstance, apiKey) {
+var Pusher = function(ckanInstance, apiKey) {
   this.client = new CKAN.Client(ckanInstance, apiKey);
 };
 
 module.exports = {
-  Importer: Importer
+  Pusher: Pusher
 };
 
 // 1. Load the Data Package off disk
@@ -34,7 +34,7 @@ config options
   - if false will fail if an existing dataset exists with the same name
 - dropBeforeInsert - drop existing data in the datastore table for a resource before inserting the new data (default true)
 */
-Importer.prototype.push = function(filePath, cb) {
+Pusher.prototype.push = function(filePath, cb) {
   var that = this
     , basePath = fs.statSync(filePath).isDirectory() ? filePath : path.dirname(filePath)
     ;
@@ -54,7 +54,7 @@ Importer.prototype.push = function(filePath, cb) {
       for(ii=0; ii<createdCkanDataset.resources.length; ii++) {
         dpJson.resources[ii].id = createdCkanDataset.resources[ii].id;
       }
-      that.importResources(dpJson, basePath, function(err) {
+      that.pushResources(dpJson, basePath, function(err) {
         var msg = 'Data Package successfully pushed to: ' + that.client.endpoint.replace('/api', '') + '/dataset/' + dpJson.name;
         if (err) cb(err);
         else cb(err, msg);
@@ -65,7 +65,7 @@ Importer.prototype.push = function(filePath, cb) {
 
 // upsert dataset metadata from a data package (JSON)
 // callback result will be resulting CKAN Dataset metadata
-Importer.prototype.upsertDatasetMetadata = function(dpJson, cb) {
+Pusher.prototype.upsertDatasetMetadata = function(dpJson, cb) {
   var that = this
     , ckanDatasetJson = _convertDataPackageToCkanDataset(dpJson);
     ;
@@ -101,7 +101,7 @@ function _convertDataPackageToCkanDataset(dpJson) {
 }
 
 
-Importer.prototype.importResources = function(dpJson, dpBasePath, cb) {
+Pusher.prototype.pushResources = function(dpJson, dpBasePath, cb) {
   var that = this;
 
   if (!dpJson.resources || dpJson.resources.length == 0) {
@@ -132,14 +132,14 @@ Importer.prototype.importResources = function(dpJson, dpBasePath, cb) {
   function _doImport(resource, cb) {
     var dataPath = path.join(dpBasePath, resource.path);
     var dataStream = fs.createReadStream(dataPath);
-    that.importResource(dataStream, resource, cb); 
+    that.pushResourceData(dataStream, resource, cb); 
   }
 
   // start off looping through resources
   done();
 }
 
-Importer.prototype.importResource = function(dataStream, resourceJson, cb) {
+Pusher.prototype.pushResourceData = function(dataStream, resourceJson, cb) {
   var that = this
     , resourceId = resourceJson.id
     , fields = []
@@ -178,7 +178,7 @@ Importer.prototype.importResource = function(dataStream, resourceJson, cb) {
 };
 
 // load rows of data one chunk at a time
-Importer.prototype._loadDataToDataStore = function(dataStream, resourceId, cb) {
+Pusher.prototype._loadDataToDataStore = function(dataStream, resourceId, cb) {
   var that = this
     , offset = 0
     , chunkSize = 10000

@@ -3,7 +3,7 @@ var stream = require('stream')
   , request = require('request')
   , sinon = require('sinon')
   , CKAN = require('ckan')
-  , Importer = require('../index.js').Importer
+  , Pusher = require('../index.js').Pusher
   ;
 
 function makeStream(string) {
@@ -13,7 +13,7 @@ function makeStream(string) {
   return s;
 }
 
-describe('importResource', function() {
+describe('pushResourceData', function() {
   var stubbed = null;
   before(function() {
     stubbed = sinon.stub(CKAN.Client.prototype, '_ajax', function(arg1, cb) {
@@ -24,7 +24,7 @@ describe('importResource', function() {
     stubbed.restore();
   });
   it('works ok', function(done) {
-    var importer = new Importer('http://localhost');
+    var importer = new Pusher('http://localhost');
     var inStream = 'A,B\n1,2';
     var resource = {
       name: 'xyz',
@@ -42,7 +42,7 @@ describe('importResource', function() {
         ]
       }
     };
-    importer.importResource(inStream, resource, function(err, out) {
+    importer.pushResourceData(inStream, resource, function(err, out) {
       assert.equal(stubbed.callCount, 3);
       calledWith = stubbed.getCall(1).args[0];
       assert.equal(calledWith.data.resource_id, resource.id);
@@ -82,7 +82,7 @@ describe('push', function() {
     stubbed.restore();
   });
   it('works ok - no existing dataset', function(done) {
-    var importer = new Importer('http://localhost');
+    var importer = new Pusher('http://localhost');
     importer.push('test/fixtures/datapackage.json', function(err, out) {
       assert(!err, JSON.stringify(err));
       // should be called 4x
