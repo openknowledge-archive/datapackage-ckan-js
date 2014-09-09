@@ -27,24 +27,40 @@ module.exports = {
 // 3. Load data into the DataStore for each resource
 
 // Update (Data Package already exists)
+//
+
 /*
 config options
 
+- owner_org - owner organization name for CKAN dataset
+
+Ideas
 - overwrite - overwrite existing dataset (default true)
   - if false will fail if an existing dataset exists with the same name
 - dropBeforeInsert - drop existing data in the datastore table for a resource before inserting the new data (default true)
 */
-Pusher.prototype.push = function(filePath, cb) {
+Pusher.prototype.push = function(filePath, config, cb) {
   var that = this
     , basePath = fs.statSync(filePath).isDirectory() ? filePath : path.dirname(filePath)
     ;
-
+  if (arguments.length < 3) {
+    cb = config;
+    config = {};
+  }
   dpRead.load(filePath, function(err, dpJson) {
     if (err) {
       cb(err);
       return;
     }
     console.log('Loaded Data Package');
+
+    // HACK - insert owner_org onto dpJson so it ends up on CKAN dataset metadata
+    // need to think how to do this better
+    // probably should be in _convertDataPackageToCkanDataset
+    if (config.owner_org) {
+      dpJson.owner_org = config.owner_org;
+    }
+
     that.upsertDatasetMetadata(dpJson, function(err, createdCkanDataset) {
       console.log('Created/Updated CKAN Dataset with Data Package Metadata');
       if (err) {
