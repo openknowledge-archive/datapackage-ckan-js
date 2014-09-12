@@ -1,11 +1,11 @@
 {
   "name": "datapackage-ckan",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "dependencies": {
       "request": ""
     , "csv-parse": ""
     , "ckan": ""
-    , "datapackage-read": ""
+    , "datapackage-read": ">=0.2.0"
   },
   "devDependencies": {
       "mocha": ""
